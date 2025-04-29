@@ -14,17 +14,22 @@
 
 # List users
 ```aws iam list-users```
-# to list all the IAM users created recently (set your own date, go back to at least the key disclosure date, but add a week or three if you can)
+
+# to list all the IAM users created recently (set your own date, go back to at least the key disclosure date, but add a week or three if you can)    
 ```aws iam list-users --query 'Users[?CreateDate>=`2025-04-28T00:00:00Z`]' --output table```
-#list all the new roles
+
+# list all the new roles
 ```aws iam list-roles --query 'Roles[?CreateDate>=`2025-04-28T00:00:00Z`]' --output table```
-#list all the new policies
+
+# list all the new policies
 ```aws iam list-policies --scope Local --query 'Policies[?CreateDate>=`2025-04-28T00:00:00Z`]' --output table```
-#list all the new access keys since that date
+
+# list all the new access keys since that date
 ```for user in $(aws iam list-users --query 'Users[*].UserName' --output text); do
   echo "Access keys for user $user"
   aws iam list-access-keys --user-name $user --query 'AccessKeyMetadata[?CreateDate>=`2025-04-28T00:00:00Z`]' --output table
-done```
+done  
+```
 
 
 
@@ -33,7 +38,7 @@ done```
 
 ### preserve evidence
 
-#get the current IAM state to compare against further changes
+# get the current IAM state to compare against further changes
 ```aws iam get-account-authorization-details > account-auth-details.json```
 
 
@@ -45,27 +50,31 @@ done```
 
 ### Investigation
 
-#if you've got your cloudtrail logs in S3, you can use athena to look for suspicious activity
+# if you've got your cloudtrail logs in S3, you can use athena to look for suspicious activity
 ```SELECT eventTime, eventName, userIdentity.arn, sourceIPAddress, awsRegion
 FROM cloudtrail_logs
 WHERE (eventName = 'CreateUser' OR eventName = 'CreateAccessKey' OR eventName = 'RunInstances')
   AND eventTime > timestamp '2025-04-28 00:00:00'
-ORDER BY eventTime DESC;```
+ORDER BY eventTime DESC;  
+```
 
-#or you can use bash and the commandline to search for new instances across regions.
+# or you can use bash and the commandline to search for new instances across regions.
 ```for region in $(aws ec2 describe-regions --query "Regions[*].RegionName" --output text); do
   echo "Region: $region"
   aws ec2 describe-instances --region $region
-done```
+done  
+```
 
 # to find everything the compromised key did
-```aws cloudtrail lookup-events --lookup-attributes AttributeKey=AccessKeyId,AttributeValue=<COMPROMISED_ACCESS_KEY_ID>```
-OR
-in Athena if you've got the logs
+```aws cloudtrail lookup-events --lookup-attributes AttributeKey=AccessKeyId,AttributeValue=<COMPROMISED_ACCESS_KEY_ID>  
+```
+# OR
+# in Athena if you've got the logs
 ```SELECT eventTime, eventName, userIdentity.userName, sourceIPAddress, awsRegion, requestParameters
 FROM cloudtrail_logs
 WHERE userIdentity.accessKeyId = 'COMPROMISED_ACCESS_KEY_ID'
-ORDER BY eventTime DESC;```
+ORDER BY eventTime DESC;  
+```
 
 
 
