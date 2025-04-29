@@ -66,7 +66,9 @@ done
 ```
 
 # to find everything the compromised key did
-```aws cloudtrail lookup-events --lookup-attributes AttributeKey=AccessKeyId,AttributeValue=<COMPROMISED_ACCESS_KEY_ID>  
+
+```  aws cloudtrail lookup-events --lookup-attributes AttributeKey=AccessKeyId,AttributeValue=<COMPROMISED_ACCESS_KEY_ID>  
+
 ```
 # OR
 # in Athena if you've got the logs
